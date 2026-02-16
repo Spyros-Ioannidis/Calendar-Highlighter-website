@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Hightlighter</title>
+    <link rel="stylesheet" href="Cal.css">
+
+    <script src="generateCalendar.js"></script>
+    <script src="parameters.js"></script>
+    <script src="ReadFile.js"></script>
+    <script src="Tooltips.js"></script>
+    <script src="Preloaded_Dates.js"></script>
+    <script src="zoom.js"></script>
+    <script src="function_Calls.js"></script>
+    <script src="Calendar_Actions.js"></script>
+
+    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48">
+            <path fill="%23CED7DB" d="M13 3h4v3h14V3h4v3l3.438-.062C42 6 42 6 43 7c.1 2.51.14 4.99.133 7.5l.003 2.275q0 
+            2.385-.006 4.772c-.005 2.443 0 4.885.007 7.328q0 2.313-.004 4.625l.006 2.229C43.115 40.885 43.115 40.885 42 
+            42c-2.655.101-5.283.14-7.937.133l-2.41.003q-2.528 0-5.054-.006-3.882-.005-7.763.007-2.45 
+            0-4.898-.004l-2.362.006C6.115 42.115 6.115 42.115 5 41c-.1-2.51-.14-4.99-.133-7.5l-.003-2.275q0-2.385.006-4.772c.005-2.443 
+            0-4.885-.007-7.328q0-2.312.004-4.625l-.006-2.229C4.885 7.115 4.885 7.115 6 6q3.5-.061 7 0z"/>
+            <path fill="%23F04134" d="M13 3h4v3h14V3h4v3l3.438-.062C42 6 42 6 43 7v9H5C5 7 5 7 6 6q3.5-.061 7 0z"/>
+            <path fill="%23F44336" d="M29 29h6v6h-6z"/><path fill="%23888d90" d="M21 29h6v6h-6zM13 29h6v6h-6zM29 21h6v6h-6zM21 
+            21h6v6h-6zM13 21h6v6h-6z"/><path fill="%23B0BBC2" d="M31 3h4v8h-4zM13 3h4v8h-4z"/></svg>'>
+
+    <!-- style editable by javascript -->
+    <style id="style_days_rows">
+        .days.days-rows {
+            grid-template-columns: repeat(31, auto);
+        }
+    </style>
+    <style id="style_week_containers">
+        .week-container {
+            grid-template-columns: repeat(2, auto);
+        }
+    </style>
+
+</head>
+
+<body onload="CreateCalendar(); adjust_calendar_wrapper_height();">
+    <header>
+        <span class="svg icon_menu" onclick="sidebar_open()"></span>
+        <span class="svg icon_zoom" onclick="zoom_menu_visibility(event)"></span>
+        Yearly calendar
+    </header>
+
+
+    <div id="parameters">
+        <div id="top_param">
+            <span style="font-size: 2em;">Parameters</span>
+            <span class="svg icon_close" onclick="sidebar_close()"></span>
+        </div>
+
+
+        <!-- Year Selector -->
+        <h3>Year
+            <span class="info_container">
+                    <span class="svg icon_info i_inactive" id="info_Year"
+                        onclick="info_icon_switch(event, 'info_Year')">
+                        <span class="infoBox" id="info_Year_Box">
+                            <span class="infoBox_text" style="width:100px">Arrow keys change year</span>
+                        </span>
+                    </span>
+                </span>
+        </h3>
+        <button onclick="changeYear(-1)">←</button>
+        <input type="number" id="year" min="-271821" max="275760" style="width: 50px; text-align:center;"
+            oninput="validateLength(this.value, this.id)" onkeydown="input_enter_Cal()"> <!--input_enter(this)-->
+        <button onclick="changeYear(1)">→</button>
+        <br>
+
+        <!-- Calendar_MODES Selector -->
+        <div class="custom_radio" id="Calendar_MODES">
+            <h3>Calendar Mode</h3>
+            <input type="radio" id="MODE_YEAR" name="Calendar_MODE" value="1"
+                onchange="calendar_MODE = 'YEAR'; CreateCalendar();" checked>
+            <label for="MODE_YEAR" style="padding: 5px 10px;">YEAR</label>
+
+            <input type="radio" id="MODE_MONTH" name="Calendar_MODE" value="2"
+                onchange="calendar_MODE = 'MONTH'; CreateCalendar()">
+            <label for="MODE_MONTH" style="padding: 5px 10px;">MONTH</label>
+
+            <input type="radio" id="MODE_WEEK" name="Calendar_MODE" value="3"
+                onchange="calendar_MODE = 'WEEK'; CreateCalendar()">
+            <label for="MODE_WEEK" style="padding: 5px 10px;">WEEK</label>
+        </div>
+
+        <!-- Collumn/row Selector -->
+        <div id="options_wrapper">
+            <!-- Collumn Selector for YEAR MODE -->
+            <div id="option_MODE_YEAR" class="options_MODES show"> <!-- show on default-->
+                <div class="checkbox-container" id="checkbox_showWeeks">
+                    <input type="checkbox" id="showWeeks" onchange="DO_Weeks()">
+                    <label for="showWeeks">Show Weeks</label>
+                </div>
+
+                <div class="custom_radio" id="radio_MODE_YEAR">
+                    <h3>Columns</h3>
+                    <input type="radio" id="column_YEAR_1" name="columns_YEAR" value="1" onclick="updateGrid()">
+                    <label for="column_YEAR_1" class="radio_upper">1</label>
+                    <input type="radio" id="column_YEAR_2" name="columns_YEAR" value="2" onclick="updateGrid()">
+                    <label for="column_YEAR_2" class="radio_upper">2</label>
+                    <input type="radio" id="column_YEAR_3" name="columns_YEAR" value="3" onclick="updateGrid()">
+                    <label for="column_YEAR_3" class="radio_upper">3</label>
+                    <input type="radio" id="column_YEAR_4" name="columns_YEAR" value="4" onclick="updateGrid()" checked>
+                    <label for="column_YEAR_4" class="radio_upper">4</label>
+                    <input type="radio" id="column_YEAR_5" name="columns_YEAR" value="5" onclick="updateGrid()">
+                    <label for="column_YEAR_5" class="radio_upper">5</label>
+                    <input type="radio" id="column_YEAR_6" name="columns_YEAR" value="6" onclick="updateGrid()">
+                    <label for="column_YEAR_6" class="radio_upper">6</label>
+
+
+                    <br>
+                    <input type="radio" id="column_YEAR_7" name="columns_YEAR" value="7" onclick="updateGrid()">
+                    <label for="column_YEAR_7" class="radio_lower">7</label>
+                    <input type="radio" id="column_YEAR_8" name="columns_YEAR" value="8" onclick="updateGrid()">
+                    <label for="column_YEAR_8" class="radio_lower">8</label>
+                    <input type="radio" id="column_YEAR_9" name="columns_YEAR" value="9" onclick="updateGrid()">
+                    <label for="column_YEAR_9" class="radio_lower">9</label>
+                    <input type="radio" id="column_YEAR_10" name="columns_YEAR" value="10" onclick="updateGrid()">
+                    <label for="column_YEAR_10" class="radio_lower">10</label>
+                    <input type="radio" id="column_YEAR_11" name="columns_YEAR" value="11" onclick="updateGrid()">
+                    <label for="column_YEAR_11" class="radio_lower">11</label>
+                    <input type="radio" id="column_YEAR_12" name="columns_YEAR" value="12" onclick="updateGrid()">
+                    <label for="column_YEAR_12" class="radio_lower">12</label>
+                </div>
+            </div>
+
+            <!-- Row Selector for MONTH MODE -->
+            <div id="option_MODE_MONTH" class="options_MODES">
+                <div class="checkbox-container" id="checkbox_Nothing">
+                    <input type="checkbox" id="doesNothing">
+                    <label for="doesNothing">Does Nothing</label>
+                </div>
+
+                <div class="custom_radio" id="radio_MODE_MONTH">
+                    <h3>
+                        Rows
+                        <span class="info_container">
+                            <span class="svg icon_info i_inactive" id="info_radio_MODE_MONTH"
+                                onclick="info_icon_switch(event, 'info_radio_MODE_MONTH')">
+                                <span class="infoBox" id="info_radio_MODE_MONTH_Box">
+                                    <span class="infoBox_text">(9-10)(12) unavailable</span>
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                    <input type="radio" id="rows_MONTH_1" name="rows_MONTH" value="1" onclick="updateGrid_MODE_MONTH()"
+                        checked>
+                    <label for="rows_MONTH_1" class="radio_upper">1</label>
+                    <input type="radio" id="rows_MONTH_2" name="rows_MONTH" value="2" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_2" class="radio_upper">2</label>
+                    <input type="radio" id="rows_MONTH_3" name="rows_MONTH" value="3" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_3" class="radio_upper">3</label>
+                    <input type="radio" id="rows_MONTH_4" name="rows_MONTH" value="4" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_4" class="radio_upper">4</label>
+                    <input type="radio" id="rows_MONTH_5" name="rows_MONTH" value="5" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_5" class="radio_upper">5</label>
+                    <input type="radio" id="rows_MONTH_6" name="rows_MONTH" value="6" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_6" class="radio_upper">6</label>
+
+
+                    <br>
+                    <input type="radio" id="rows_MONTH_7" name="rows_MONTH" value="7" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_7" class="radio_lower">7</label>
+                    <input type="radio" id="rows_MONTH_8" name="rows_MONTH" value="8" onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_8" class="radio_lower">8</label>
+                    <input type="radio" id="rows_MONTH_11" name="rows_MONTH" value="11"
+                        onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_11" class="radio_lower">11</label>
+                    <input type="radio" id="rows_MONTH_16" name="rows_MONTH" value="16"
+                        onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_16" class="radio_lower">16</label>
+                    <input type="radio" id="rows_MONTH_31" name="rows_MONTH" value="31"
+                        onclick="updateGrid_MODE_MONTH()">
+                    <label for="rows_MONTH_31" class="radio_lower">31</label>
+                </div>
+            </div>
+
+            <!-- Collumn Selector for WEEK MODE -->
+            <div id="option_MODE_WEEK" class="options_MODES">
+                <div class="checkbox-container" id="checkbox_showMonths">
+                    <input type="checkbox" id="showMonths" onchange="Display_MONTHS()">
+                    <label for="showMonths">Show Months</label>
+                </div>
+
+                <div class="custom_radio" id="radio_MODE_WEEK">
+                    <h3>
+                        Columns
+                        <span class="info_container">
+                            <span class="svg icon_info i_inactive" id="info_Columbs_WEEK"
+                                onclick="info_icon_switch(event, 'info_Columbs_WEEK')">
+                                <span class="infoBox" id="info_Columbs_WEEK_Box">
+                                    <span class="infoBox_text">_WEEK </span>
+                                </span>
+                            </span>
+                        </span>
+                    </h3>
+                    <input type="radio" id="column_WEEK_1" name="columns_WEEK" value="1"
+                        onclick="updateGrid_MODE_WEEK()" checked>
+                    <label for="column_WEEK_1" class="radio_upper">1</label>
+                    <input type="radio" id="column_WEEK_2" name="columns_WEEK" value="2"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_2" class="radio_upper">2</label>
+                    <input type="radio" id="column_WEEK_3" name="columns_WEEK" value="3"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_3" class="radio_upper">3</label>
+                    <input type="radio" id="column_WEEK_4" name="columns_WEEK" value="4"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_4" class="radio_upper">4</label>
+                    <input type="radio" id="column_WEEK_5" name="columns_WEEK" value="5"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_5" class="radio_upper">5</label>
+                    <input type="radio" id="column_WEEK_6" name="columns_WEEK" value="6"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_6" class="radio_upper">6</label>
+
+
+                    <br>
+                    <input type="radio" id="column_WEEK_7" name="columns_WEEK" value="7"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_7" class="radio_lower">7</label>
+                    <input type="radio" id="column_WEEK_8" name="columns_WEEK" value="8"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_8" class="radio_lower">8</label>
+                    <input type="radio" id="column_WEEK_9" name="columns_WEEK" value="9"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_9" class="radio_lower">9</label>
+                    <input type="radio" id="column_WEEK_10" name="columns_WEEK" value="10"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_10" class="radio_lower">10</label>
+                    <input type="radio" id="column_WEEK_11" name="columns_WEEK" value="11"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_11" class="radio_lower">11</label>
+                    <input type="radio" id="column_WEEK_12" name="columns_WEEK" value="12"
+                        onclick="updateGrid_MODE_WEEK()">
+                    <label for="column_WEEK_12" class="radio_lower">12</label>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Datetitle Options -->
+        <h3>
+            DateTitle
+            <span class="info_container">
+                <span class="svg icon_info i_inactive" id="info_DateTitle"
+                    onclick="info_icon_switch(event, 'info_DateTitle')">
+                    <span class="infoBox" id="info_DateTitle_Box">
+                        <span class="infoBox_text"  style="width:95px">
+                            Text and count at the start of highlighted date in tooltip
+                        </span>
+                    </span>
+                </span>
+            </span>
+        </h3>
+        <div class="checkbox-container">
+            <input type="checkbox" id="ID_showDateIndex" onchange="Highlight_ALL()" checked>
+            <label for="ID_showDateIndex" style="padding: 5px 61.6px;">Show DateIndex</label>
+        </div>
+        <input type="text" id="ID_DateTitle_Index_String" placeholder="⎯" value="Chapter" size="13" maxlength="15"
+            style="width: 108px;" onkeydown="input_enter_Update_DT_String()">
+        <button onclick="Update_DateTitle_Index_String()">Update Text</button>
+
+        <input type="number" id="ID_DateTitle_Index_Count" placeholder="1" value="1" min="-10000" max="10000"
+            style="width: 96px;" onkeydown="input_enter_Update_DT_Count()">
+        <button onclick="Update_DateTitle_Index_Count()">Update Count</button>
+
+
+        <!-- Highlight Options -->
+        <h3>Highlight Dates
+            <span class="info_container">
+                <span class="svg icon_info i_inactive" id="info_HL"
+                    onclick="info_icon_switch(event, 'info_HL')">
+                    <span class="infoBox" id="info_HL_Box">
+                        <span class="infoBox_text" style="width:130px; left: -50px;">
+                            If a file is chosen it must be  .txt
+                            <br>Each line will have a format of
+                            <br>year month day "text"
+                            <br>OR
+                            <br>year month day
+                            <br>Example:
+                            <br>2021 03 31 "Examle"
+                            <br>2022 12 11
+                        </span>
+                    </span>
+                </span>
+            </span>
+        </h3>
+        <button onclick="Clear_LISTS()">Clear</button>
+        <button onclick="loadDatesFromJSFile(Preloaded_Test)">Preloaded_Test</button>
+
+        <br>
+        <div class="custom_fileInput">
+            <input id="fileInput" type="file" accept=".txt,text/plain"/>
+            <label for="fileInput">Choose a file</label>
+            <button onclick="readFile()">Read File</button>
+        </div>
+        <span id="fileName">No file chosen</span>
+
+
+        <!-- Testing options -->
+        <br>
+        <h3>
+            Testing
+            <span class="info_container">
+                <span class="svg icon_info i_inactive" id="info_Testing"
+                    onclick="info_icon_switch(event, 'info_Testing')">
+                    <span class="infoBox" id="info_Testing_Box">
+                        <span class="infoBox_text" style="width:100px">
+                            Avarage is in console log
+                        </span>
+                    </span>
+                </span>
+            </span>
+        </h3>
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="log_Switch">
+            <label for="log_Switch">Console.Log() Switch</label>
+        </div>
+        <button onclick="log(LIST_DATES)">console.log(Dates)</button>
+        <br>
+        <button onclick="Clear_avg_Time();">Clr AvgT</button>
+        <button onclick="avg_Time();">AvgT</button>
+    </div>
+
+
+
+    <div id="zoom_menu">
+        <select id="sel" class="select" onchange="zoom_options()">
+            <option value=0.4>40%</option>
+            <option value=0.5>50%</option>
+            <option value=0.67>67%</option>
+            <option value=0.75>75%</option>
+            <option value=0.8>80%</option>
+            <option value=0.9>90%</option>
+            <option value=1 selected>100%</option>
+            <option value=1.1>110%</option>
+            <option value=1.25>125%</option>
+            <option value=1.5>150%</option>
+            <option value=1.75>175%</option>
+            <option value=2>200%</option>
+            <option value=2.5>250%</option>
+            <option value=3>300%</option>
+        </select>
+        <button onclick="zoom_in()">+</button>
+        <button onclick="zoom_out()">−</button>
+        <button onclick="zoom_reset()">Reset</button>
+    </div>
+
+
+    <div id="overlay" onclick=sidebar_close()></div>
+
+
+    <div id="displayYear"></div>
+
+
+    <div id="calendar-wrapper">
+        <div id="calendar"></div>
+    </div>
+</body>
+
+</html>
